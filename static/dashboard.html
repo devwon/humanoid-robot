@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1117">
+    <title>Cost Dashboard - Remote CLI</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <style>
+        html, body { overflow: auto; }
+        .app { max-width: 900px; overflow-y: auto; height: auto; min-height: 100dvh; padding-bottom: 24px; }
+
+        .dash-nav { padding: 8px 12px; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .dash-nav a { color: var(--accent); text-decoration: none; font-size: 13px; }
+
+        .dash-section { padding: 16px 12px; }
+        .dash-section h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
+        .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+        .summary-card .value { font-size: 20px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+        .summary-card .label { font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 16px; position: relative; height: 300px; }
+
+        .cost-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .cost-table th, .cost-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+        .cost-table th { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; background: var(--surface); position: sticky; top: 0; }
+        .cost-table th:first-child, .cost-table td:first-child { text-align: left; }
+        .cost-table tr:hover td { background: var(--surface-2); }
+        .cost-table .total-row td { font-weight: 700; border-top: 2px solid var(--accent-dim); color: var(--accent); }
+
+        .filter-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+        .filter-btn { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 600; }
+        .filter-btn.active { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
+
+        .empty-state { text-align: center; padding: 48px 16px; color: var(--text-dim); font-size: 14px; }
+
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>Cost Dashboard</h1>
+            <div class="header-actions">
+                <span id="entry-count" class="status">loading...</span>
+            </div>
+        </header>
+
+        <nav class="dash-nav">
+            <a href="/">&larr; Back to Remote CLI</a>
+        </nav>
+
+        <div class="dash-section">
+            <div class="summary-cards" id="summary-cards"></div>
+        </div>
+
+        <div class="dash-section">
+            <div class="filter-bar" id="filter-bar">
+                <button class="filter-btn" data-range="1h">1H</button>
+                <button class="filter-btn" data-range="6h">6H</button>
+                <button class="filter-btn active" data-range="24h">24H</button>
+                <button class="filter-btn" data-range="7d">7D</button>
+                <button class="filter-btn" data-range="30d">30D</button>
+                <button class="filter-btn" data-range="all">All</button>
+            </div>
+        </div>
+
+        <div class="dash-section">
+            <h2>Hourly Cost by Model</h2>
+            <div class="chart-container">
+                <canvas id="cost-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="dash-section">
+            <h2>Model Breakdown</h2>
+            <div class="table-wrap">
+                <table class="cost-table" id="model-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Requests</th>
+                            <th>In Tokens</th>
+                            <th>Out Tokens</th>
+                            <th>USD</th>
+                            <th>KRW</th>
+                            <th>Avg Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="dash-section">
+            <h2>Recent Requests</h2>
+            <div class="table-wrap">
+                <table class="cost-table" id="recent-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Model</th>
+                            <th>Tokens</th>
+                            <th>USD</th>
+                            <th>KRW</th>
+                            <th>Rate</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
